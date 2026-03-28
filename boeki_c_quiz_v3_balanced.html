@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>貿易実務C級クイズ v3</title>
+  <style>
+    :root{
+      --bg:#f6f8fc; --card:#fff; --text:#1f2937; --muted:#6b7280; --border:#dbe3ef;
+      --accent:#2563eb; --ok:#10b981; --ng:#ef4444; --hint:#7c3aed;
+      --okbg:#ecfdf5; --ngbg:#fef2f2; --infobg:#eff6ff; --infoborder:#93c5fd;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg);color:var(--text)}
+    .wrap{max-width:860px;margin:0 auto;padding:20px 16px 40px}
+    .title{font-size:28px;font-weight:700;margin:0 0 6px}
+    .sub{font-size:14px;color:var(--muted);margin:0 0 14px;line-height:1.6}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+    .chip{border:1px solid var(--border);background:#fff;border-radius:999px;padding:8px 12px;font-size:14px;cursor:pointer}
+    .chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.05)}
+    .meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:13px;margin-bottom:12px}
+    .badge{display:inline-block;background:#f8fafc;border:1px solid var(--border);border-radius:999px;padding:4px 10px;font-size:12px}
+    .q{font-size:22px;line-height:1.55;font-weight:700;margin:0 0 16px}
+    .choices{display:grid;gap:10px}
+    .choice{width:100%;text-align:left;border:1px solid var(--border);background:#fff;border-radius:14px;padding:14px;font-size:16px;cursor:pointer}
+    .choice.correct{background:var(--okbg);border-color:var(--ok)}
+    .choice.wrong{background:var(--ngbg);border-color:var(--ng)}
+    .choice.disabled{cursor:default}
+    .result,.note{display:none;margin-top:16px;border-radius:14px;padding:14px;line-height:1.7}
+    .result{background:var(--infobg);border:1px solid var(--infoborder)}
+    .result .judge{font-weight:700;margin-bottom:8px}
+    .result .answer{font-weight:700;margin-bottom:8px}
+    .note{background:#faf5ff;border:1px solid #ddd6fe}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+    .btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font-size:15px;cursor:pointer;min-width:120px}
+    .btn.primary{background:var(--accent);color:#fff}
+    .btn.secondary{background:#fff;color:var(--text);border:1px solid var(--border)}
+    .footer{margin-top:12px;color:var(--muted);font-size:13px;line-height:1.6}
+    @media (max-width:520px){.q{font-size:20px}.choice{font-size:15px}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="title">貿易実務C級クイズ v3</h1>
+  <p class="sub">問題タイプを混ぜた版です。選択式だけでなく、「理解型」「比較型」を入れています。選択肢をタップすると、その場で正解・解説が表示されます。</p>
+  <div class="chips" id="chips"></div>
+  <div class="card">
+    <div class="meta">
+      <div id="progress"></div>
+      <div>
+        <span class="badge" id="category"></span>
+        <span class="badge" id="typeBadge"></span>
+      </div>
+    </div>
+    <div class="q" id="question"></div>
+    <div class="choices" id="choices"></div>
+    <div class="note" id="noteBox"></div>
+    <div class="result" id="resultBox">
+      <div class="judge" id="judge"></div>
+      <div class="answer" id="answer"></div>
+      <div id="explanation"></div>
+    </div>
+    <div class="actions">
+      <button class="btn secondary" id="shuffleBtn">シャッフル</button>
+      <button class="btn primary" id="nextBtn">次の問題</button>
+    </div>
+    <div class="footer">
+      用語問題は「英語の意味」、理解型は「役割」、比較型は「違い」を押さえる構成です。
+    </div>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {id:1, cat:"L/C・決済", type:"用語", q:"Beneficiaryとは誰か。", opts:{A:"輸入者",B:"輸出者",C:"銀行",D:"通関業者"}, correct:"B", exp:"Beneficiary（受益者）は、信用状に基づいて支払いを受ける側で、通常は Exporter（輸出者）。"},
+  {id:2, cat:"L/C・決済", type:"用語", q:"Applicantとは何を指すか。", opts:{A:"輸出者",B:"銀行",C:"信用状の発行依頼人",D:"通関業者"}, correct:"C", exp:"Applicant（発行依頼人）は、銀行に Letter of Credit（信用状）の開設を依頼する当事者。通常は Importer（輸入者）。"},
+  {id:3, cat:"L/C・決済", type:"理解", q:"信用状取引において Applicant は通常誰か。", opts:{A:"輸出者",B:"輸入者",C:"船会社",D:"保険会社"}, correct:"B", exp:"Applicant は通常 Importer（輸入者）。一方、Beneficiary は通常 Exporter（輸出者）。"},
+  {id:4, cat:"L/C・決済", type:"用語", q:"L/Cとは何の略か。", opts:{A:"Loan Contract",B:"Letter of Credit",C:"Loading Certificate",D:"Legal Contract"}, correct:"B", exp:"L/C は Letter of Credit（信用状）の略。銀行が一定条件のもとで支払いを保証する仕組み。"},
+  {id:5, cat:"L/C・決済", type:"理解", q:"L/Cの役割として最も適切なものはどれか。", opts:{A:"輸送方法の指定",B:"支払いの保証",C:"保険の加入",D:"通関手続き"}, correct:"B", exp:"L/C は書類条件を満たせば銀行が支払いを行う仕組みで、主な役割は支払いの保証。"},
+  {id:6, cat:"決済", type:"用語", q:"D/Pとは何か。", opts:{A:"前払い",B:"支払と引換に書類渡し",C:"手形引受後に書類渡し",D:"分割払い"}, correct:"B", exp:"D/P（Documents against Payment）は、支払いと引換に書類を渡す決済条件。"},
+  {id:7, cat:"決済", type:"用語", q:"D/Aとは何か。", opts:{A:"支払と引換に書類渡し",B:"手形引受後に書類渡し",C:"即時現金払い",D:"銀行保証"}, correct:"B", exp:"D/A（Documents against Acceptance）は、手形引受と引換に書類を渡し、支払いは後日行う。"},
+  {id:8, cat:"決済", type:"比較", q:"D/PとD/Aの違いとして正しいものはどれか。", opts:{A:"輸送方法",B:"支払いタイミング",C:"保険条件",D:"原産地証明の有無"}, correct:"B", exp:"D/P は支払後に書類渡し、D/A は引受後に書類渡し。違いは支払いタイミング。"},
+  {id:9, cat:"決済", type:"理解", q:"初取引・高額取引で最も安全性が高い決済方法はどれか。", opts:{A:"前払い",B:"後払い",C:"L/C",D:"現金払い"}, correct:"C", exp:"初取引や高額取引では、銀行が介在する L/C（信用状）の方が安全性が高い。"},
+  {id:10, cat:"輸送", type:"用語", q:"AWBの特徴として正しいものはどれか。", opts:{A:"貨物の所有権を持つ",B:"有価証券である",C:"運送状であり権利は持たない",D:"海上輸送専用"}, correct:"C", exp:"AWB（Air Waybill）は航空運送状で、B/L と違い、貨物の引渡請求権や所有権を表さない。"},
+  {id:11, cat:"輸送", type:"用語", q:"B/Lの特徴として正しいものはどれか。", opts:{A:"保険証券である",B:"貨物の引渡請求権を持つ",C:"航空専用の書類",D:"見積書の一種"}, correct:"B", exp:"B/L（Bill of Lading）は、受領証・運送契約書・引渡請求権を兼ねる重要書類。"},
+  {id:12, cat:"輸送", type:"比較", q:"AWBとB/Lの違いとして正しいものはどれか。", opts:{A:"AWBは有価証券",B:"B/Lは引渡請求権を持つ",C:"AWBは海上専用",D:"B/Lは航空専用"}, correct:"B", exp:"B/L は引渡請求権を持つが、AWB は持たない。ここが大きな違い。"},
+  {id:13, cat:"基本用語", type:"用語", q:"Consigneeとは誰か。", opts:{A:"荷送人",B:"荷受人",C:"銀行",D:"保険会社"}, correct:"B", exp:"Consignee は貨物を受け取る側。通常は Importer（輸入者）やその代理人。"},
+  {id:14, cat:"基本用語", type:"用語", q:"Shipperとは誰か。", opts:{A:"荷受人",B:"荷送人",C:"通関業者",D:"銀行"}, correct:"B", exp:"Shipper は貨物を出荷する側。通常は Exporter（輸出者）。"},
+  {id:15, cat:"輸送", type:"用語", q:"Notify Partyとは何か。", opts:{A:"荷送人",B:"到着通知先",C:"銀行",D:"保険会社"}, correct:"B", exp:"Notify Party は貨物到着の通知を受ける相手。Consignee と同じ場合もある。"},
+  {id:16, cat:"輸送", type:"用語", q:"ETAの意味はどれか。", opts:{A:"出発予定時刻",B:"到着予定時刻",C:"通関予定日",D:"支払期限"}, correct:"B", exp:"ETA は Estimated Time of Arrival の略で、到着予定時刻。"},
+  {id:17, cat:"輸送", type:"用語", q:"ETDの意味はどれか。", opts:{A:"到着予定時刻",B:"出発予定時刻",C:"積荷目録",D:"支払期限"}, correct:"B", exp:"ETD は Estimated Time of Departure の略で、出発予定時刻。"},
+  {id:18, cat:"インコタームズ", type:"理解", q:"FOBでリスクが移転するタイミングはいつか。", opts:{A:"契約時",B:"工場出荷時",C:"本船積込時",D:"到着時"}, correct:"C", exp:"FOB（Free on Board）は、貨物が本船に積み込まれた時点でリスクが移転する。"},
+  {id:19, cat:"インコタームズ", type:"理解", q:"CIFで輸出者が負担するものはどれか。", opts:{A:"運賃と保険",B:"関税と消費税",C:"輸入通関費用のみ",D:"国内配送費のみ"}, correct:"A", exp:"CIF（Cost, Insurance and Freight）では輸出者が運賃と保険を負担する。"},
+  {id:20, cat:"インコタームズ", type:"比較", q:"FOBとCIFの違いとして正しいものはどれか。", opts:{A:"輸送手段",B:"保険負担",C:"通関書類の形式",D:"通貨の種類"}, correct:"B", exp:"FOB では輸出者に保険負担義務はないが、CIF では輸出者が保険を手配する。"},
+  {id:21, cat:"書類", type:"理解", q:"Packing Listの役割として最も適切なものはどれか。", opts:{A:"価格を示す",B:"梱包内容・数量・重量を示す",C:"保険内容を示す",D:"支払条件を示す"}, correct:"B", exp:"Packing List は梱包内容、数量、重量を示す書類で、通関や検品に使われる。"},
+  {id:22, cat:"書類", type:"理解", q:"Commercial Invoiceの役割として最も適切なものはどれか。", opts:{A:"梱包内容の確認",B:"価格と取引条件の提示",C:"輸送予定時刻の表示",D:"貨物保険の証明"}, correct:"B", exp:"Commercial Invoice は価格、品名、数量、取引条件を示す基本書類で、通関にも重要。"},
+  {id:23, cat:"書類", type:"比較", q:"Packing Listに通常含まれないものはどれか。", opts:{A:"数量",B:"重量",C:"価格",D:"梱包内容"}, correct:"C", exp:"価格は通常 Commercial Invoice に記載し、Packing List には記載しない。"},
+  {id:24, cat:"書類", type:"用語", q:"Certificate of Originとは何か。", opts:{A:"品質保証書",B:"原産地証明書",C:"船荷証券",D:"保険証券"}, correct:"B", exp:"Certificate of Origin（原産地証明書）は商品の原産地を証明し、関税率の適用に影響する。"},
+  {id:25, cat:"書類", type:"用語", q:"Manifestとは何か。", opts:{A:"契約書",B:"積荷目録",C:"見積書",D:"保険証券"}, correct:"B", exp:"Manifest は船や航空機に積載された貨物一覧を示す書類。"},
+  {id:26, cat:"物流", type:"理解", q:"Forwarderの役割として正しいものはどれか。", opts:{A:"商品製造",B:"輸送・書類手配",C:"関税徴収",D:"銀行保証"}, correct:"B", exp:"Forwarder は輸送手配、物流調整、書類サポートなどを行う物流業者。"},
+  {id:27, cat:"物流", type:"用語", q:"Freightとは何か。", opts:{A:"保険料",B:"運賃",C:"関税",D:"手数料"}, correct:"B", exp:"Freight は輸送にかかる運賃。"},
+  {id:28, cat:"物流", type:"用語", q:"Demurrageとは何か。", opts:{A:"運賃",B:"保険料",C:"滞留による追加費用",D:"税金"}, correct:"C", exp:"Demurrage はコンテナや船の滞留、引き取り遅延などで発生する追加費用。"},
+  {id:29, cat:"通関", type:"用語", q:"HSコードの役割として正しいものはどれか。", opts:{A:"輸送方法の指定",B:"品目分類",C:"保険分類",D:"契約条件"}, correct:"B", exp:"HSコードは国際的な品目分類コードで、関税分類や通関に使用される。"},
+  {id:30, cat:"通関", type:"理解", q:"HSコードが重要な理由として最も適切なものはどれか。", opts:{A:"運賃が決まる",B:"関税率や規制判断の基準になる",C:"決済方法が決まる",D:"保険会社が決まる"}, correct:"B", exp:"HSコードは関税率、輸出入規制、統計分類などの基準となるため重要。"}
+];
+
+const categories = ["すべて", ...new Set(questions.map(q => q.cat))];
+let currentCategory = "すべて";
+let filtered = [...questions];
+let currentIndex = 0;
+let answered = false;
+
+const chipsEl = document.getElementById("chips");
+const progressEl = document.getElementById("progress");
+const categoryEl = document.getElementById("category");
+const typeBadgeEl = document.getElementById("typeBadge");
+const questionEl = document.getElementById("question");
+const choicesEl = document.getElementById("choices");
+const resultBox = document.getElementById("resultBox");
+const judgeEl = document.getElementById("judge");
+const answerEl = document.getElementById("answer");
+const explanationEl = document.getElementById("explanation");
+const nextBtn = document.getElementById("nextBtn");
+const shuffleBtn = document.getElementById("shuffleBtn");
+
+function renderChips(){
+  chipsEl.innerHTML = "";
+  categories.forEach(cat => {
+    const btn = document.createElement("button");
+    btn.className = "chip" + (cat === currentCategory ? " active" : "");
+    btn.textContent = cat;
+    btn.onclick = () => {
+      currentCategory = cat;
+      filtered = cat === "すべて" ? [...questions] : questions.filter(q => q.cat === cat);
+      currentIndex = 0;
+      renderChips();
+      renderQuestion();
+    };
+    chipsEl.appendChild(btn);
+  });
+}
+
+function renderQuestion(){
+  const item = filtered[currentIndex];
+  answered = false;
+  progressEl.textContent = `${currentIndex + 1} / ${filtered.length}`;
+  categoryEl.textContent = item.cat;
+  typeBadgeEl.textContent = item.type;
+  questionEl.textContent = item.q;
+  resultBox.style.display = "none";
+  judgeEl.textContent = "";
+  answerEl.textContent = "";
+  explanationEl.textContent = "";
+
+  choicesEl.innerHTML = "";
+  ["A","B","C","D"].forEach(letter => {
+    const btn = document.createElement("button");
+    btn.className = "choice";
+    btn.innerHTML = `<strong>${letter}.</strong> ${item.opts[letter]}`;
+    btn.onclick = () => handleAnswer(letter);
+    choicesEl.appendChild(btn);
+  });
+}
+
+function handleAnswer(selected){
+  if (answered) return;
+  answered = true;
+  const item = filtered[currentIndex];
+  const buttons = [...choicesEl.querySelectorAll(".choice")];
+
+  buttons.forEach((btn, idx) => {
+    const letter = ["A","B","C","D"][idx];
+    btn.classList.add("disabled");
+    if (letter === item.correct) btn.classList.add("correct");
+    if (letter === selected && selected !== item.correct) btn.classList.add("wrong");
+  });
+
+  judgeEl.textContent = selected === item.correct ? "正解です。" : "不正解です。";
+  answerEl.textContent = `正解：${item.correct}. ${item.opts[item.correct]}`;
+  explanationEl.textContent = item.exp;
+  resultBox.style.display = "block";
+}
+
+nextBtn.onclick = () => {
+  currentIndex = (currentIndex + 1) % filtered.length;
+  renderQuestion();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+shuffleBtn.onclick = () => {
+  filtered = [...filtered].sort(() => Math.random() - 0.5);
+  currentIndex = 0;
+  renderQuestion();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+renderChips();
+renderQuestion();
+</script>
+</body>
+</html>
