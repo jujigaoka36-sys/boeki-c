@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>貿易実務クイズ V6 完全版</title>
+<style>
+body{font-family:sans-serif;background:#f5f7fb;margin:0;padding:20px}
+.container{max-width:800px;margin:auto;background:white;padding:20px;border-radius:12px}
+h1{margin-top:0}
+.choice{display:block;margin:8px 0;padding:10px;border:1px solid #ccc;border-radius:8px;cursor:pointer}
+.correct{background:#d1fae5;border-color:#10b981}
+.wrong{background:#fee2e2;border-color:#ef4444}
+button{margin-top:15px;padding:10px 15px;border:none;background:#2563eb;color:white;border-radius:8px}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>貿易実務クイズ V6（45問）</h1>
+<p id="progress"></p>
+<h2 id="question"></h2>
+<div id="choices"></div>
+<p id="explanation"></p>
+<button onclick="next()">次へ</button>
+</div>
+
+<script>
+const q = [
+{q:"Beneficiaryとは誰か",o:["輸入者","輸出者","銀行","通関業者"],a:1,e:"受益者＝通常輸出者"},
+{q:"Applicantとは何か",o:["輸出者","銀行","発行依頼人","通関業者"],a:2,e:"信用状を依頼する人"},
+{q:"L/Cの役割はどれか",o:["輸送保証","支払保証","保険契約","契約書"],a:1,e:"銀行が支払保証"},
+{q:"D/Pとは何か",o:["前払い","支払後書類渡し","引受後渡し","分割"],a:1,e:"支払と引換"},
+{q:"D/Aとは何か",o:["支払後","引受後","即時","現金"],a:1,e:"後払い"},
+{q:"AWBの特徴は",o:["所有権あり","有価証券","権利なし","海上"],a:2,e:"運送状"},
+{q:"B/Lの特徴は",o:["保険","航空","引渡請求権","見積"],a:2,e:"最重要は引渡権"},
+{q:"FOBリスク移転は",o:["契約時","出荷","本船積込","到着"],a:2,e:"船積時"},
+{q:"CIF特徴",o:["運賃保険負担","関税","通関","配送"],a:0,e:"輸出者負担"},
+{q:"Packing List役割",o:["価格","梱包内容","保険","契約"],a:1,e:"中身"},
+{q:"B/L発行者",o:["輸出者","輸入者","運送人","銀行"],a:2,e:"船会社"},
+{q:"Consigneeとは",o:["荷送人","荷受人","銀行","保険"],a:1,e:"受取人"},
+{q:"Shipperとは",o:["荷受人","荷送人","銀行","通関"],a:1,e:"出荷者"},
+{q:"Freightとは",o:["保険","運賃","税","手数料"],a:1,e:"運賃"},
+{q:"Manifestとは",o:["契約","積荷一覧","保険","見積"],a:1,e:"船全体"},
+{q:"ETAとは",o:["出発","到着","通関","支払"],a:1,e:"到着予定"},
+{q:"ETDとは",o:["到着","出発","番号","期限"],a:1,e:"出発予定"},
+{q:"HSコード役割",o:["輸送","分類","保険","契約"],a:1,e:"関税分類"},
+{q:"CIFで負担しない",o:["運賃","保険","関税","積込"],a:2,e:"関税は輸入者"},
+{q:"EXW特徴",o:["全部輸出者","輸入者全部","保険必須","銀行関与"],a:1,e:"輸入者負担"},
+{q:"FOB保険手配",o:["輸出者","輸入者","船会社","銀行"],a:1,e:"輸入者"},
+{q:"CIF保険手配",o:["輸出者","輸入者","船会社","銀行"],a:0,e:"輸出者"},
+{q:"FOB責任終了",o:["契約","出荷","本船上","到着"],a:2,e:"本船"},
+{q:"CIFリスク移転",o:["契約","工場","本船","到着"],a:2,e:"同じ"},
+{q:"Invoice役割",o:["梱包","価格条件","輸送","保険"],a:1,e:"価格"},
+{q:"CO役割",o:["品質","原産地","支払","梱包"],a:1,e:"関税影響"},
+{q:"Forwarder役割",o:["製造","輸送手配","徴税","保証"],a:1,e:"物流調整"},
+{q:"Demurrageとは",o:["運賃","保険","滞留費","税"],a:2,e:"遅延費"},
+{q:"AWBとB/L違い",o:["AWB有価","B/L権利","AWB海上","B/L航空"],a:1,e:"権利あり"},
+{q:"D/P vs D/A違い",o:["輸送","支払タイミング","保険","通貨"],a:1,e:"タイミング"},
+{q:"FOB保険なし破損",o:["輸出者","輸入者","船","銀行"],a:1,e:"輸入者負担"},
+{q:"B/Lなし受取方法",o:["再発行","待つ","Telex","保険"],a:2,e:"Telex"},
+{q:"Sea Waybill特徴",o:["権利あり","B/L同様","原本不要","保険"],a:2,e:"最初から不要"},
+{q:"Telex違い",o:["通貨","原本","保険","輸送"],a:1,e:"原本不要"},
+{q:"B/L最重要役割",o:["保険","価格","引渡","予定"],a:2,e:"受取権"},
+{q:"EXWトラブル責任",o:["輸出者","輸入者","船","銀行"],a:1,e:"輸入者"},
+{q:"貨物受取不可原因",o:["為替","B/Lなし","保険","梱包"],a:1,e:"提示必要"},
+{q:"最危険決済",o:["前払い","L/C","D/P","D/A"],a:3,e:"未回収リスク"},
+{q:"CFRとCIF違い",o:["リスク","保険","通貨","輸送"],a:1,e:"保険のみ"},
+{q:"Telex前提",o:["輸送","保険","支払完了","通関"],a:2,e:"支払済"},
+{q:"輸出者がB/L持つ理由",o:["税金","輸送","代金回収","保険"],a:2,e:"引換券"},
+{q:"Sea Waybill使用場面",o:["初取引","高額","信頼関係あり","危険取引"],a:2,e:"信頼時"},
+{q:"Manifest作成者",o:["輸出者","輸入者","運送人","銀行"],a:2,e:"船会社"},
+{q:"Packing List視点",o:["船全体","貨物中身","銀行","保険"],a:1,e:"箱の中"},
+{q:"最重要リスク管理",o:["為替","保険","契約","信用"],a:3,e:"信用が基盤"}
+];
+
+let i=0;
+
+function load(){
+document.getElementById("progress").innerText=(i+1)+"/45";
+document.getElementById("question").innerText=q[i].q;
+const c=document.getElementById("choices");
+c.innerHTML="";
+q[i].o.forEach((opt,idx)=>{
+let b=document.createElement("div");
+b.className="choice";
+b.innerText=opt;
+b.onclick=()=>select(idx,b);
+c.appendChild(b);
+});
+document.getElementById("explanation").innerText="";
+}
+
+function select(idx,el){
+const correct=q[i].a;
+const choices=document.querySelectorAll(".choice");
+choices.forEach((c,j)=>{
+if(j===correct)c.classList.add("correct");
+if(j===idx && idx!==correct)c.classList.add("wrong");
+});
+document.getElementById("explanation").innerText="解説："+q[i].e;
+}
+
+function next(){
+i=(i+1)%q.length;
+load();
+}
+
+load();
+</script>
+</body>
+</html>
