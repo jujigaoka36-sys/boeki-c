@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>貿易実務クイズ V8（完成版）</title>
+<style>
+body{font-family:sans-serif;background:#f4f6fb;margin:0;padding:20px}
+.container{max-width:820px;margin:auto;background:#fff;padding:20px;border-radius:12px}
+h1{margin-top:0}
+.choice{display:block;margin:8px 0;padding:10px;border:1px solid #ccc;border-radius:8px;cursor:pointer}
+.correct{background:#d1fae5;border-color:#10b981}
+.wrong{background:#fee2e2;border-color:#ef4444}
+button{margin-top:15px;padding:10px 15px;border:none;background:#2563eb;color:#fff;border-radius:8px}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>貿易実務クイズ V8（45問・最終版）</h1>
+<p id="progress"></p>
+<h2 id="question"></h2>
+<div id="choices"></div>
+<p id="explanation"></p>
+<button onclick="next()">次へ</button>
+</div>
+
+<script>
+const q = [
+{q:"HSコードとは何か",o:["輸送手段を示す番号","関税分類を行うコード","保険契約を示す書類","売買契約の番号"],a:1,e:"HS Code = Harmonized System Code（関税率決定のための商品分類コード）"},
+{q:"D/Aとは何か",o:["支払と同時に書類を受け取る","手形引受と引換に書類を受け取る","銀行が支払を保証する","前払いで決済する"],a:1,e:"D/A = Documents against Acceptance（手形引受後に書類を受け取る）"},
+{q:"D/Pとは何か",o:["手形引受後に書類を受け取る","支払と引換に書類を受け取る","銀行保証で決済する","後払いで決済する"],a:1,e:"D/P = Documents against Payment（支払と引換に書類を受け取る）"},
+{q:"L/Cの役割として正しいものはどれか",o:["輸送を保証する仕組み","銀行が支払を保証する仕組み","保険を代替する仕組み","為替リスクを回避する仕組み"],a:1,e:"L/C = Letter of Credit（銀行が支払保証する決済手段）"},
+{q:"B/Lの最も重要な役割はどれか",o:["貨物の価格を示す書類","貨物の引渡請求権を持つ","保険契約を証明する","輸送日程を示す"],a:1,e:"B/L = Bill of Lading（貨物引渡請求権を持つ有価証券）"},
+{q:"AWBの特徴として正しいものはどれか",o:["貨物の所有権を示す書類","有価証券として機能する","引渡請求権を持たない","海上輸送専用の書類"],a:2,e:"AWB = Air Waybill（航空運送状で権利なし）"},
+{q:"Sea Waybillの特徴として正しいものはどれか",o:["貨物の所有権を示す書類","原本提示が必要","原本なしで受取可能","銀行が発行する書類"],a:2,e:"Sea Waybill（非有価証券で原本不要）"},
+{q:"Telex Releaseの説明として正しいものはどれか",o:["輸送手段の一種","B/L原本なしで引渡可能にする","保険契約の一種","通関を簡略化する制度"],a:1,e:"Telex Release（B/L返却により原本不要で引渡可能）"},
+{q:"FOB条件でリスクが移転するのはいつか",o:["契約締結時","工場出荷時","本船に積み込まれた時","到着港に着いた時"],a:2,e:"FOB = Free on Board（本船積込時にリスク移転）"},
+{q:"CIF条件で輸出者が負担するものはどれか",o:["関税と通関費","運賃と保険","輸入側配送費","国内輸送費のみ"],a:1,e:"CIF = Cost Insurance and Freight（運賃と保険を輸出者負担）"},
+{q:"FOB条件で保険を手配するのは誰か",o:["輸出者","輸入者","船会社","銀行"],a:1,e:"FOBでは輸入者が保険手配"},
+{q:"EXW条件の特徴として正しいものはどれか",o:["輸出者がすべて手配する","輸入者がほぼ全て手配する","銀行が関与する","保険加入が義務"],a:1,e:"EXW = Ex Works（輸入者がほぼ全て負担）"},
+{q:"Packing Listの役割はどれか",o:["価格を示す書類","梱包内容を示す書類","保険内容を示す書類","契約条件を示す書類"],a:1,e:"Packing List（数量・重量・梱包内容を示す）"},
+{q:"Commercial Invoiceの役割はどれか",o:["輸送方法を示す","価格と取引条件を示す","保険契約を示す","梱包内容を示す"],a:1,e:"Commercial Invoice（価格・条件を示す基本書類）"},
+{q:"Manifestとは何か",o:["契約書の一覧","積荷の一覧表","保険契約書","見積書"],a:1,e:"Manifest（船全体の貨物一覧）"},
+{q:"ETAの意味はどれか",o:["出発予定時刻","到着予定時刻","積込時刻","通関時刻"],a:1,e:"ETA = Estimated Time of Arrival"},
+{q:"ETDの意味はどれか",o:["到着予定時刻","出発予定時刻","通関日","支払期限"],a:1,e:"ETD = Estimated Time of Departure"},
+{q:"Consigneeとは誰か",o:["貨物を送る人","貨物を受け取る人","銀行","保険会社"],a:1,e:"Consignee（荷受人）"},
+{q:"Shipperとは誰か",o:["荷受人","荷送人","銀行","通関業者"],a:1,e:"Shipper（荷送人）"},
+{q:"Freightとは何を意味するか",o:["保険料","運賃","関税","手数料"],a:1,e:"Freight（輸送運賃）"},
+{q:"CIFでリスクが移転するタイミングはどれか",o:["契約時","出荷時","本船積込時","到着時"],a:2,e:"CIFでもリスクは本船積込時に移転"},
+{q:"B/Lを発行するのは誰か",o:["輸出者","輸入者","運送人","銀行"],a:2,e:"運送人（Carrier）が発行"},
+{q:"D/Aが輸出者にとってリスクが高い理由はどれか",o:["前払いだから","後払いになるため","保険がないため","通関が遅れるため"],a:1,e:"支払が後になるため未回収リスクあり"},
+{q:"D/Pの特徴として正しいものはどれか",o:["後払いになる","支払後に書類を受取る","銀行保証がある","分割払い"],a:1,e:"支払と引換に書類を受取る"},
+{q:"Telex Releaseが成立する前提はどれか",o:["保険契約","支払完了","輸送完了","通関完了"],a:1,e:"B/L返却済み＝支払完了前提"},
+{q:"Sea Waybillが使われる場面はどれか",o:["初取引","高リスク取引","信頼関係がある取引","支払未確定"],a:2,e:"信頼関係がある場合に使用"},
+{q:"EXWで輸送トラブル時の責任は誰か",o:["輸出者","輸入者","船会社","銀行"],a:1,e:"輸入者が責任を負う"},
+{q:"貨物が受け取れない原因として最も直接的なものはどれか",o:["為替変動","B/L未提示","保険未加入","梱包不良"],a:1,e:"B/L提示が必要"},
+{q:"CFRとCIFの違いはどれか",o:["輸送方法","保険の有無","通貨","契約形態"],a:1,e:"CIFのみ保険含む"},
+{q:"Forwarderの役割はどれか",o:["商品製造","輸送手配","税金徴収","支払保証"],a:1,e:"Forwarder（物流手配業者）"},
+{q:"Certificate of Originの役割はどれか",o:["品質保証","原産地証明","支払保証","梱包証明"],a:1,e:"CO（原産地証明書）"},
+{q:"Demurrageとは何か",o:["運賃","保険料","滞船料","税金"],a:2,e:"Demurrage（遅延による追加費用）"},
+{q:"B/Lを輸出者が持つ理由はどれか",o:["税金のため","輸送管理のため","代金回収のため","保険のため"],a:2,e:"引換券として代金回収に使用"},
+{q:"AWBとB/Lの違いはどれか",o:["輸送手段","所有権の有無","通貨","契約"],a:1,e:"B/Lのみ有価証券"},
+{q:"FOBで運賃を負担するのは誰か",o:["輸出者","輸入者","船会社","銀行"],a:1,e:"輸入者負担"},
+{q:"CIFで保険を手配するのは誰か",o:["輸出者","輸入者","銀行","船会社"],a:0,e:"輸出者が保険手配"},
+{q:"HSコードが重要な理由はどれか",o:["輸送を決めるため","税率を決めるため","保険料決定","契約条件決定"],a:1,e:"関税率決定に使用される"},
+{q:"InvoiceとPacking Listの違いはどれか",o:["同じ内容","価格と梱包内容","輸送方法","保険"],a:1,e:"Invoice=価格、Packing=内容"},
+{q:"最も安全な決済方法はどれか",o:["後払い","D/A","D/P","L/C"],a:3,e:"銀行保証あり"},
+{q:"最もリスクが高い決済方法はどれか",o:["前払い","L/C","D/P","D/A"],a:3,e:"未回収リスク最大"},
+{q:"Manifestを作成するのは誰か",o:["輸出者","輸入者","運送人","銀行"],a:2,e:"運送人が作成する"},
+{q:"Packing Listの視点はどれか",o:["船全体","貨物の中身","銀行視点","保険内容"],a:1,e:"箱の中身を示す"},
+{q:"貿易で最も重要な要素はどれか",o:["距離","通貨","信用","速度"],a:2,e:"信用が取引の前提"}
+];
+
+let i=0;
+function load(){
+document.getElementById("progress").innerText=(i+1)+"/45";
+document.getElementById("question").innerText=q[i].q;
+const c=document.getElementById("choices");c.innerHTML="";
+q[i].o.forEach((opt,idx)=>{
+let b=document.createElement("div");
+b.className="choice";
+b.innerText=opt;
+b.onclick=()=>select(idx);
+c.appendChild(b);
+});
+document.getElementById("explanation").innerText="";
+}
+function select(idx){
+const correct=q[i].a;
+const choices=document.querySelectorAll(".choice");
+choices.forEach((c,j)=>{
+if(j===correct)c.classList.add("correct");
+if(j===idx && idx!==correct)c.classList.add("wrong");
+});
+document.getElementById("explanation").innerText="解説："+q[i].e;
+}
+function next(){i=(i+1)%q.length;load();}
+load();
+</script>
+</body>
+</html>
