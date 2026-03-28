@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>貿易実務C級クイズ</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --border: #dbe3ef;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 20px 16px 32px;
+    }
+    .header {
+      margin-bottom: 16px;
+    }
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 12px 0 16px;
+    }
+    .chip {
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .chip.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+    }
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .question {
+      font-size: 22px;
+      line-height: 1.5;
+      font-weight: 700;
+      margin: 0 0 16px;
+    }
+    .choice {
+      display: block;
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 14px;
+      margin-bottom: 10px;
+      font-size: 16px;
+      color: var(--text);
+    }
+    .reveal {
+      background: #eef4ff;
+      border: 1px solid #c7d9ff;
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 16px;
+      display: none;
+    }
+    .answer {
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .explanation {
+      line-height: 1.7;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+    button.action {
+      appearance: none;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 15px;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+      min-width: 120px;
+    }
+    button.secondary {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .footer {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1 class="title">貿易実務C級クイズ</h1>
+      <p class="sub">iPadでそのまま使えるシンプル版。答えを見ると正解と解説が表示されます。</p>
+    </div>
+
+    <div class="controls" id="categoryChips"></div>
+
+    <div class="card">
+      <div class="meta">
+        <div id="progress"></div>
+        <div id="category"></div>
+      </div>
+      <h2 class="question" id="question"></h2>
+
+      <div id="choices"></div>
+
+      <div class="reveal" id="revealBox">
+        <div class="answer" id="answer"></div>
+        <div class="explanation" id="explanation"></div>
+      </div>
+
+      <div class="actions">
+        <button class="action" id="showBtn">答えを見る</button>
+        <button class="action secondary" id="nextBtn">次の問題</button>
+        <button class="action secondary" id="shuffleBtn">シャッフル</button>
+      </div>
+
+      <div class="footer">
+        一度「答えを見る」を押した問題も、次の問題に進むとまた隠れます。
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      {id:1, category:"信用状", q:"信用状取引におけるBeneficiaryは誰か", a:"輸入者", b:"輸出者", c:"銀行", d:"フォワーダー", correct:"B", exp:"Beneficiary（受益者）は信用状の支払を受ける側で通常は輸出者。"},
+      {id:2, category:"信用状", q:"Applicantとは何を指すか", a:"輸出者", b:"銀行", c:"信用状の発行依頼人", d:"通関業者", correct:"C", exp:"Applicant（発行依頼人）は信用状の開設を依頼する者で通常は輸入者。"},
+      {id:3, category:"輸送", q:"AWBの特徴として正しいものはどれか", a:"所有権を持つ", b:"船便専用", c:"有価証券", d:"運送状で権利なし", correct:"D", exp:"Air Waybillは航空運送状であり、貨物の引渡請求権は持たない。"},
+      {id:4, category:"輸送", q:"B/Lの役割として正しいものはどれか", a:"保険証券", b:"所有権を示す", c:"見積書", d:"支払条件書", correct:"B", exp:"Bill of Ladingは受領証・契約書・引渡請求権を持つ書類。"},
+      {id:5, category:"インコタームズ", q:"CIF条件で輸出者が負担しないものはどれか", a:"運賃", b:"保険", c:"関税", d:"船積費", correct:"C", exp:"CIF（Cost Insurance and Freight）は運賃と保険を輸出者が負担し、関税は輸入者負担。"},
+      {id:6, category:"インコタームズ", q:"FOBでリスクが移転するタイミングはいつか", a:"契約時", b:"工場出荷時", c:"本船積込時", d:"到着時", correct:"C", exp:"FOBは貨物が本船に積み込まれた時点でリスク移転。"},
+      {id:7, category:"書類", q:"Packing Listの役割は何か", a:"支払条件", b:"梱包内容", c:"保険内容", d:"契約内容", correct:"B", exp:"Packing Listは梱包内容や数量・重量を示す書類。"},
+      {id:8, category:"書類", q:"Commercial Invoiceの役割は何か", a:"梱包情報", b:"価格と条件", c:"輸送手段", d:"保険内容", correct:"B", exp:"Commercial Invoiceは価格や取引条件を示す基本書類。"},
+      {id:9, category:"基本用語", q:"Consigneeとは誰か", a:"荷送人", b:"荷受人", c:"銀行", d:"保険会社", correct:"B", exp:"Consigneeは貨物を受け取る側。"},
+      {id:10, category:"基本用語", q:"Shipperとは誰か", a:"荷受人", b:"荷送人", c:"通関業者", d:"銀行", correct:"B", exp:"Shipperは貨物を出荷する側。"},
+      {id:11, category:"輸送", q:"ETAの意味はどれか", a:"出発予定", b:"到着予定", c:"積込日", d:"通関日", correct:"B", exp:"ETA（Estimated Time of Arrival）は到着予定時刻。"},
+      {id:12, category:"輸送", q:"ETDの意味はどれか", a:"到着予定", b:"出発予定", c:"積荷目録", d:"支払期限", correct:"B", exp:"ETD（Estimated Time of Departure）は出発予定時刻。"},
+      {id:13, category:"決済", q:"D/Pの意味として正しいものはどれか", a:"手形引受後書類渡し", b:"支払と引換に書類渡し", c:"無条件支払", d:"前払い", correct:"B", exp:"D/P（Documents against Payment）は支払いと引換に書類を渡す決済条件で、支払後にB/L等を受け取る。"},
+      {id:14, category:"決済", q:"D/Aの意味として正しいものはどれか", a:"支払後書類渡し", b:"手形引受後書類渡し", c:"即時決済", d:"分割支払", correct:"B", exp:"D/A（Documents against Acceptance）は手形引受と引換に書類を渡す決済条件で、後日支払いとなる。"},
+      {id:15, category:"決済", q:"L/Cとは何の略か", a:"Loan Contract", b:"Letter of Credit", c:"Loading Certificate", d:"Legal Contract", correct:"B", exp:"L/C（Letter of Credit）は銀行が支払を保証する仕組み。"},
+      {id:16, category:"物流", q:"Forwarderの役割として正しいものはどれか", a:"商品製造", b:"輸送手配", c:"保険契約", d:"関税徴収", correct:"B", exp:"フォワーダーは輸送や書類手配を行う物流業者。"},
+      {id:17, category:"物流", q:"Freightの意味はどれか", a:"保険料", b:"運賃", c:"関税", d:"手数料", correct:"B", exp:"Freightは輸送にかかる運賃。"},
+      {id:18, category:"書類", q:"Certificate of Originの目的はどれか", a:"品質保証", b:"原産地証明", c:"支払保証", d:"梱包証明", correct:"B", exp:"原産地証明書は関税適用などに影響する書類。"},
+      {id:19, category:"書類", q:"Manifestとは何か", a:"契約書", b:"積荷目録", c:"保険証券", d:"見積書", correct:"B", exp:"Manifestは貨物の一覧を示す書類。"},
+      {id:20, category:"物流", q:"Demurrageとは何か", a:"運賃", b:"保険料", c:"滞船料", d:"税金", correct:"C", exp:"Demurrageは船やコンテナの滞留による追加費用。"},
+      {id:21, category:"書類", q:"Packing Listに含まれないものはどれか", a:"数量", b:"重量", c:"価格", d:"梱包内容", correct:"C", exp:"価格はInvoiceに記載される。"},
+      {id:22, category:"物流", q:"Forwarderの役割として誤りはどれか", a:"輸送手配", b:"書類サポート", c:"商品製造", d:"物流調整", correct:"C", exp:"フォワーダーは製造は行わない。"},
+      {id:23, category:"輸送", q:"Notify Partyとは何か", a:"荷送人", b:"通関業者", c:"到着通知先", d:"銀行", correct:"C", exp:"到着を通知する相手。"},
+      {id:24, category:"通関", q:"HSコードの役割はどれか", a:"輸送方法指定", b:"品目分類", c:"保険分類", d:"契約条件", correct:"B", exp:"HSコードは関税分類に使用されるコード。"}
+    ];
+
+    const categories = ["すべて", ...new Set(questions.map(q => q.category))];
+    let currentCategory = "すべて";
+    let filtered = [...questions];
+    let currentIndex = 0;
+
+    const chips = document.getElementById("categoryChips");
+    const progress = document.getElementById("progress");
+    const category = document.getElementById("category");
+    const questionEl = document.getElementById("question");
+    const choicesEl = document.getElementById("choices");
+    const answerEl = document.getElementById("answer");
+    const explanationEl = document.getElementById("explanation");
+    const revealBox = document.getElementById("revealBox");
+    const showBtn = document.getElementById("showBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const shuffleBtn = document.getElementById("shuffleBtn");
+
+    function renderChips() {
+      chips.innerHTML = "";
+      categories.forEach(cat => {
+        const btn = document.createElement("button");
+        btn.className = "chip" + (cat === currentCategory ? " active" : "");
+        btn.textContent = cat;
+        btn.onclick = () => {
+          currentCategory = cat;
+          filtered = cat === "すべて" ? [...questions] : questions.filter(q => q.category === cat);
+          currentIndex = 0;
+          renderChips();
+          renderQuestion();
+        };
+        chips.appendChild(btn);
+      });
+    }
+
+    function renderQuestion() {
+      if (!filtered.length) return;
+      const item = filtered[currentIndex];
+      progress.textContent = `${currentIndex + 1} / ${filtered.length}`;
+      category.textContent = item.category;
+      questionEl.textContent = item.q;
+      choicesEl.innerHTML = `
+        <div class="choice">A. ${item.a}</div>
+        <div class="choice">B. ${item.b}</div>
+        <div class="choice">C. ${item.c}</div>
+        <div class="choice">D. ${item.d}</div>
+      `;
+      answerEl.textContent = `正解：${item.correct}`;
+      explanationEl.textContent = item.exp;
+      revealBox.style.display = "none";
+    }
+
+    showBtn.onclick = () => {
+      revealBox.style.display = "block";
+    };
+
+    nextBtn.onclick = () => {
+      currentIndex = (currentIndex + 1) % filtered.length;
+      renderQuestion();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    shuffleBtn.onclick = () => {
+      filtered = [...filtered].sort(() => Math.random() - 0.5);
+      currentIndex = 0;
+      renderQuestion();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    renderChips();
+    renderQuestion();
+  </script>
+</body>
+</html>
