@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>貿易実務クイズ V7 完全版</title>
+<style>
+body{font-family:sans-serif;background:#f5f7fb;margin:0;padding:20px}
+.container{max-width:800px;margin:auto;background:white;padding:20px;border-radius:12px}
+h1{margin-top:0}
+.choice{display:block;margin:8px 0;padding:10px;border:1px solid #ccc;border-radius:8px;cursor:pointer}
+.correct{background:#d1fae5;border-color:#10b981}
+.wrong{background:#fee2e2;border-color:#ef4444}
+button{margin-top:15px;padding:10px 15px;border:none;background:#2563eb;color:white;border-radius:8px}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>貿易実務クイズ V7（完全版・英語解説付き）</h1>
+<p id="progress"></p>
+<h2 id="question"></h2>
+<div id="choices"></div>
+<p id="explanation"></p>
+<button onclick="next()">次へ</button>
+</div>
+
+<script>
+const q = [
+{q:"Beneficiaryとは誰か",o:["輸入者","輸出者","銀行","通関業者"],a:1,e:"Beneficiary = 受益者（通常は輸出者）"},
+{q:"Applicantとは何か",o:["輸出者","銀行","発行依頼人","通関業者"],a:2,e:"Applicant = 発行依頼人（信用状開設を依頼する者）"},
+{q:"L/Cとは何か",o:["融資","信用状","輸送書類","保険"],a:1,e:"L/C = Letter of Credit（銀行が支払保証する仕組み）"},
+{q:"D/Pとは何か",o:["前払い","支払後書類渡し","引受後","分割"],a:1,e:"D/P = Documents against Payment（支払と引換に書類を渡す）"},
+{q:"D/Aとは何か",o:["前払い","引受後書類渡し","支払後","現金"],a:1,e:"D/A = Documents against Acceptance（手形引受後に書類を渡す）"},
+{q:"B/Lの役割は",o:["保険","引渡請求権","価格","契約"],a:1,e:"B/L = Bill of Lading（貨物引渡請求権を持つ）"},
+{q:"AWBの特徴は",o:["有価証券","所有権あり","権利なし","海上"],a:2,e:"AWB = Air Waybill（航空運送状、権利なし）"},
+{q:"Sea Waybillの特徴は",o:["有価証券","原本必要","原本不要","保険"],a:2,e:"Sea Waybill（非有価証券で原本不要）"},
+{q:"Telex Releaseとは",o:["輸送方法","原本不要引渡","保険","契約"],a:1,e:"Telex Release（B/L原本返却により原本不要で引渡可能）"},
+{q:"Freightとは",o:["保険","運賃","税","手数料"],a:1,e:"Freight（運賃）"},
+{q:"Consigneeとは",o:["荷送人","荷受人","銀行","保険"],a:1,e:"Consignee（荷受人）"},
+{q:"Shipperとは",o:["荷受人","荷送人","銀行","通関"],a:1,e:"Shipper（荷送人）"},
+{q:"FOBのリスク移転は",o:["契約時","出荷","本船積込","到着"],a:2,e:"FOB（Free on Board）積込時にリスク移転"},
+{q:"CIFの特徴は",o:["保険運賃負担","関税","配送","銀行"],a:0,e:"CIF（Cost Insurance and Freight）運賃と保険を輸出者負担"},
+{q:"EXWの特徴は",o:["輸出者負担","輸入者負担","銀行負担","保険必須"],a:1,e:"EXW（Ex Works）輸入者がほぼ全て負担"},
+{q:"Invoiceの役割",o:["梱包","価格条件","輸送","保険"],a:1,e:"Commercial Invoice（価格と条件を示す書類）"},
+{q:"Packing Listの役割",o:["価格","梱包内容","契約","保険"],a:1,e:"Packing List（数量・重量・内容を示す）"},
+{q:"Manifestとは",o:["契約","積荷一覧","保険","見積"],a:1,e:"Manifest（積荷目録、船全体の貨物一覧）"},
+{q:"ETAとは",o:["出発","到着","通関","期限"],a:1,e:"ETA = Estimated Time of Arrival（到着予定）"},
+{q:"ETDとは",o:["到着","出発","番号","支払"],a:1,e:"ETD = Estimated Time of Departure（出発予定）"},
+{q:"HSコードとは",o:["輸送","分類","保険","契約"],a:1,e:"HS Code（関税分類コード）"},
+{q:"FOBで保険は誰",o:["輸出者","輸入者","銀行","船"],a:1,e:"FOBでは輸入者が保険手配"},
+{q:"CIFで保険は誰",o:["輸出者","輸入者","銀行","船"],a:0,e:"CIFでは輸出者が保険手配"},
+{q:"CIFで負担しない",o:["運賃","保険","関税","積込"],a:2,e:"関税は輸入者負担"},
+{q:"B/L発行者",o:["輸出者","輸入者","運送人","銀行"],a:2,e:"運送人（船会社）が発行"},
+{q:"AWBとB/L違い",o:["AWB有価","B/L権利あり","AWB海上","B/L航空"],a:1,e:"B/Lのみ有価証券"},
+{q:"D/PとD/A違い",o:["輸送","支払タイミング","保険","契約"],a:1,e:"支払タイミングの違い"},
+{q:"FOB保険なし破損",o:["輸出者","輸入者","船","銀行"],a:1,e:"輸入者負担"},
+{q:"B/Lなし受取方法",o:["再発行","待つ","Telex","保険"],a:2,e:"Telex Release"},
+{q:"最も危険決済",o:["前払い","L/C","D/P","D/A"],a:3,e:"D/Aが最も未回収リスク高"},
+{q:"Sea Waybill用途",o:["初取引","危険","信頼関係","高額"],a:2,e:"信頼関係がある取引"},
+{q:"Telex前提条件",o:["輸送","保険","支払完了","契約"],a:2,e:"支払完了が前提"},
+{q:"B/L必要理由",o:["税","輸送","代金回収","保険"],a:2,e:"代金回収の担保"},
+{q:"EXW責任者",o:["輸出者","輸入者","銀行","船"],a:1,e:"輸入者"},
+{q:"貨物受取不可原因",o:["為替","B/L未提示","保険","梱包"],a:1,e:"B/L提示必須"},
+{q:"CFRとCIF違い",o:["輸送","保険","通貨","契約"],a:1,e:"保険の有無"},
+{q:"Demurrageとは",o:["運賃","保険","滞船料","税"],a:2,e:"Demurrage（滞船料）"},
+{q:"Forwarder役割",o:["製造","輸送手配","税徴収","保証"],a:1,e:"Forwarder（物流手配業者）"},
+{q:"Certificate of Origin",o:["品質","原産地","保険","契約"],a:1,e:"CO（原産地証明書）"},
+{q:"Manifest作成者",o:["輸出者","輸入者","運送人","銀行"],a:2,e:"運送人が作成"},
+{q:"Packing List視点",o:["船","貨物中身","銀行","保険"],a:1,e:"箱の中身"},
+{q:"最重要リスク管理",o:["為替","保険","契約","信用"],a:3,e:"信用（信用リスク管理が重要）"},
+{q:"CIFリスク移転",o:["契約","工場","本船","到着"],a:2,e:"本船積込時"},
+{q:"FOB終了地点",o:["契約","出荷","本船","到着"],a:2,e:"本船積込"},
+{q:"InvoiceとPacking違い",o:["同じ","価格と内容","輸送","保険"],a:1,e:"Invoice=価格、Packing=内容"}
+];
+
+let i=0;
+function load(){
+document.getElementById("progress").innerText=(i+1)+"/45";
+document.getElementById("question").innerText=q[i].q;
+const c=document.getElementById("choices");c.innerHTML="";
+q[i].o.forEach((opt,idx)=>{
+let b=document.createElement("div");
+b.className="choice";
+b.innerText=opt;
+b.onclick=()=>select(idx);
+c.appendChild(b);
+});
+document.getElementById("explanation").innerText="";
+}
+function select(idx){
+const correct=q[i].a;
+const choices=document.querySelectorAll(".choice");
+choices.forEach((c,j)=>{
+if(j===correct)c.classList.add("correct");
+if(j===idx && idx!==correct)c.classList.add("wrong");
+});
+document.getElementById("explanation").innerText="解説："+q[i].e;
+}
+function next(){i=(i+1)%q.length;load();}
+load();
+</script>
+</body>
+</html>
