@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>貿易実務クイズアプリ</title>
+<style>
+body{
+  font-family:sans-serif;
+  background:#f4f6fb;
+  margin:0;
+  padding:20px;
+}
+.container{
+  max-width:860px;
+  margin:auto;
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+h1{margin-top:0}
+.top-buttons{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:15px;
+}
+.choice{
+  display:block;
+  margin:8px 0;
+  padding:12px;
+  border:1px solid #ccc;
+  border-radius:8px;
+  cursor:pointer;
+}
+.choice:hover{
+  background:#f8fafc;
+}
+.correct{
+  background:#d1fae5;
+  border-color:#10b981;
+}
+.wrong{
+  background:#fee2e2;
+  border-color:#ef4444;
+}
+button{
+  margin-top:10px;
+  margin-right:8px;
+  padding:10px 14px;
+  border:none;
+  background:#2563eb;
+  color:#fff;
+  border-radius:8px;
+  cursor:pointer;
+}
+button:hover{
+  background:#1d4ed8;
+}
+.stats{
+  margin:10px 0 16px;
+  font-weight:bold;
+}
+#explanation{
+  margin-top:16px;
+  line-height:1.7;
+}
+.mode-label{
+  display:inline-block;
+  margin-bottom:8px;
+  padding:6px 10px;
+  background:#e5e7eb;
+  border-radius:999px;
+  font-size:14px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>貿易実務クイズアプリ</h1>
+
+  <div class="top-buttons">
+    <button onclick="switchQuiz(1)">No.1 基礎</button>
+    <button onclick="switchQuiz(2)">No.2 応用</button>
+    <button onclick="reviewWrong()">間違えた問題だけ復習</button>
+  </div>
+
+  <div class="mode-label" id="modeLabel">現在: No.1 基礎</div>
+
+  <div class="stats">
+    <span id="progress">1/50</span> |
+    スコア: <span id="score">0</span> |
+    正答率: <span id="rate">0%</span>
+  </div>
+
+  <h2 id="question"></h2>
+  <div id="choices"></div>
+  <p id="explanation"></p>
+
+  <button onclick="nextQuestion()">次へ</button>
+</div>
+
+<script>
+const quizSet1 = [
+
+/* ===== 決済 ===== */
+{q:"D/Aとは何か",o:["支払と同時に書類受領","手形引受後に書類受領","銀行保証","前払い"],a:1,e:"手形を引き受けた後に書類を渡す方式だ。支払前に貨物が渡るため輸出者の回収リスクが高い。"},
+{q:"D/Pとは何か",o:["後払い","支払後書類受領","信用保証","無償取引"],a:1,e:"代金支払と引換に書類を渡す方式だ。D/Aより安全だが銀行保証はない。"},
+{q:"L/Cの役割は何か",o:["契約書","銀行保証","保険","税制度"],a:1,e:"銀行が支払を保証する仕組みだ。信用リスクを大きく低減する。"},
+{q:"輸出者に最も安全な決済方法はどれか",o:["D/A","D/P","L/C","後払い"],a:2,e:"銀行保証があるためL/Cが最も安全だ。"},
+{q:"D/Aの最大リスクは何か",o:["為替変動","不払い","遅延","関税"],a:1,e:"代金回収前に貨物を渡すため不払いリスクが発生する。"},
+{q:"信用状取引で最も重要なものは何か",o:["価格","書類一致","輸送速度","関税"],a:1,e:"信用状は書類主義だ。書類が条件と一致しなければ支払われない。"},
+{q:"為替手形の役割は何か",o:["運送契約","支払指図","保険","通関"],a:1,e:"支払を指図する金融文書だ。貿易決済の中核を担う。"},
+{q:"一覧払手形とは何か",o:["後払い","提示即支払","分割","保証付き"],a:1,e:"提示された時点で直ちに支払う手形だ。"},
+{q:"期限付手形とは何か",o:["即時支払","一定期間後支払","無効","保険付"],a:1,e:"一定期間後に支払う手形だ。輸入者に有利な条件となる。"},
+{q:"輸入者に有利な決済はどれか",o:["前払い","L/C","D/A","現金"],a:2,e:"支払を遅らせることができるためD/Aが有利だ。"},
+
+/* ===== 書類 ===== */
+{q:"B/Lとは何か",o:["請求書","船荷証券","保険証券","手形"],a:1,e:"貨物受取権を表す有価証券だ。これがなければ貨物は引き取れない。"},
+{q:"インボイスとは何か",o:["契約書","請求書","運送書類","保険証書"],a:1,e:"売買内容と代金を示す書類だ。通関にも使われる。"},
+{q:"パッキングリストの役割は何か",o:["価格表示","梱包明細","保険契約","輸送契約"],a:1,e:"貨物の梱包内容や数量を示す書類だ。検査や通関で重要になる。"},
+{q:"保険証券の目的は何か",o:["税金対策","損害補填","契約証明","通関"],a:1,e:"輸送中の事故による損害を補填するためのものだ。"},
+{q:"原産地証明書の目的は何か",o:["価格証明","関税判断","保険","契約"],a:1,e:"貨物の原産国を証明し関税率の適用判断に使われる。"},
+{q:"B/Lがない場合どうなるか",o:["問題なし","貨物受取不可","通関可","保険可"],a:1,e:"貨物の引渡請求権がないため受け取れない。"},
+{q:"書類不一致とは何か",o:["価格差","条件不一致","輸送遅延","税率"],a:1,e:"信用状条件と書類内容が一致しない状態だ。支払拒否の原因となる。"},
+{q:"インボイス不備の影響は何か",o:["問題なし","通関遅延","保険増加","契約解除"],a:1,e:"通関に必要な情報が不足し手続きが遅れる。"},
+{q:"パッキングリスト不備の影響は何か",o:["問題なし","検査遅延","税率変更","保険"],a:1,e:"貨物確認ができず検査や通関が遅れる。"},
+{q:"船荷証券の機能はどれか",o:["契約のみ","受取証＋有価証券","保険","税務"],a:1,e:"運送契約の証明・受取証・有価証券の三機能を持つ。"},
+
+/* ===== インコタームズ ===== */
+{q:"FOBの危険移転時点はどこか",o:["契約時","船積時","到着時","通関時"],a:1,e:"本船に積み込まれた時点で危険が移転する。"},
+{q:"CIFで保険を手配するのは誰か",o:["買主","売主","銀行","船会社"],a:1,e:"売主が保険を手配する義務を負う。"},
+{q:"EXWの特徴は何か",o:["売主最大負担","売主最小負担","保険込み","運賃込み"],a:1,e:"売主の負担が最小となる条件だ。"},
+{q:"DDPの特徴は何か",o:["買主負担","売主最大負担","保険なし","港渡し"],a:1,e:"売主がほぼすべての費用とリスクを負担する。"},
+{q:"DAPとは何か",o:["港渡し","指定地渡し","保険なし","通関条件"],a:1,e:"指定された場所まで輸送する条件だ。"},
+{q:"CFRとは何か",o:["保険込","運賃込","関税込","全部込"],a:1,e:"運賃を売主が負担する条件だ。"},
+{q:"危険負担とは何か",o:["価格","損失責任","税金","運送費"],a:1,e:"事故時に誰が損失を負うかという問題だ。"},
+{q:"費用負担とは何か",o:["価格","コスト支払","税率","契約"],a:1,e:"誰が費用を負担するかを定めたものだ。"},
+{q:"インコタームズの目的は何か",o:["価格決定","責任分担明確化","税率決定","通関管理"],a:1,e:"費用と危険の分担を明確にするためだ。"},
+{q:"インコタームズ未設定のリスクは何か",o:["問題なし","トラブル発生","税率変化","通関不可"],a:1,e:"責任範囲が不明確になり紛争の原因となる。"},
+
+/* ===== 実務導入 ===== */
+{q:"新規取引で推奨される決済はどれか",o:["D/A","D/P","L/C","後払い"],a:2,e:"信用リスクが不明なため銀行保証のあるL/Cが適切だ。"},
+{q:"信用が低い取引先に適した条件はどれか",o:["D/A","後払い","L/C","口約束"],a:2,e:"支払保証があるL/Cを使うべきだ。"},
+{q:"船積後に事故が起きた場合の対応は何か",o:["無視","保険請求","再契約","通関"],a:1,e:"保険で損害を回収するのが基本だ。"},
+{q:"書類ミスが発覚した場合どうするか",o:["放置","訂正","破棄","無視"],a:1,e:"速やかに訂正しないと支払拒否の原因になる。"},
+{q:"輸入通関遅延の主な原因は何か",o:["船","書類不備","価格","銀行"],a:1,e:"書類不備が最も多い原因だ。"},
+{q:"為替リスク対策は何か",o:["放置","為替予約","無視","契約変更"],a:1,e:"為替予約によりレートを固定する。"},
+{q:"保険未加入のリスクは何か",o:["利益増加","損害補填不可","税率変化","契約無効"],a:1,e:"事故時に損害を回収できない。"},
+{q:"インコタームズ誤設定の結果は何か",o:["問題なし","費用紛争","税率変化","通関不可"],a:1,e:"費用負担の認識違いによる紛争が起きる。"},
+{q:"貨物遅延の影響は何か",o:["利益増加","契約違反","税率変化","保険"],a:1,e:"納期遅延により契約違反となる。"},
+{q:"B/L紛失時の対応は何か",o:["無視","保証状提出","破棄","再発行不可"],a:1,e:"保証状を提出して貨物引渡しを受ける。"}
+];
+
+const quizSet2 = [
+/* ===== 実務判断強化 ===== */
+{q:"L/C取引で銀行が確認するのは何か",o:["貨物内容","書類内容","価格","関税"],a:1,e:"銀行は書類のみを確認する。実物貨物は確認しない。"},
+{q:"ディスクレパンシーとは何か",o:["価格差","書類不一致","遅延","損傷"],a:1,e:"信用状条件と書類が一致しない状態だ。支払拒否の原因となる。"},
+{q:"Confirmed L/Cの特徴は何か",o:["保証なし","銀行保証追加","保険付き","安価"],a:1,e:"確認銀行が支払保証を追加するため安全性が高い。"},
+{q:"Unconfirmed L/Cのリスクは何か",o:["なし","発行銀行リスク","保険","税率"],a:1,e:"発行銀行の信用に依存するためリスクがある。"},
+{q:"輸出者がL/C条件で確認すべきことは何か",o:["船会社","条件一致","税率","為替"],a:1,e:"提示書類が条件と一致するかが最重要だ。"},
+{q:"信用状の期限超過時どうなるか",o:["問題なし","無効","延長","再契約"],a:1,e:"期限を過ぎると信用状は無効となる。"},
+{q:"部分船積禁止とは何か",o:["一部不可","分割不可","保険不可","通関不可"],a:1,e:"貨物を複数回に分けて船積できない条件だ。"},
+{q:"トランシップ禁止とは何か",o:["陸送禁止","積替禁止","保険不可","契約"],a:1,e:"途中港での積替が禁止される条件だ。"},
+{q:"インボイス金額不一致の結果は何か",o:["問題なし","支払拒否","税率変化","通関"],a:1,e:"信用状条件と一致しなければ支払拒否される。"},
+{q:"保険金額不足のリスクは何か",o:["問題なし","損失補填不足","税率","契約"],a:1,e:"事故時に全額補填されない。"},
+
+/* ===== インコタームズ応用 ===== */
+{q:"CIFで保険が最低条件の場合の問題は何か",o:["問題なし","補償不足","税率","通関"],a:1,e:"最低補償では損害を完全にカバーできない可能性がある。"},
+{q:"FOBで運賃を負担するのは誰か",o:["売主","買主","銀行","船会社"],a:1,e:"船積以降は買主が負担する。"},
+{q:"EXWのリスクは何か",o:["なし","買主負担過大","税率","契約"],a:1,e:"買主がほぼ全てを負担するためリスクが大きい。"},
+{q:"DDPの売主リスクは何か",o:["なし","最大負担","税率","通関"],a:1,e:"売主がほぼ全責任を負うため負担が大きい。"},
+{q:"DAPで輸入通関は誰が行うか",o:["売主","買主","銀行","船会社"],a:1,e:"輸入通関は買主が行う。"},
+{q:"危険移転と費用負担の違いは何か",o:["同じ","別概念","税率","契約"],a:1,e:"危険と費用は別の概念であり一致しない場合もある。"},
+{q:"CFRで保険を付けるのは誰か",o:["売主","買主","銀行","不要"],a:1,e:"CFRでは買主が保険を手配する。"},
+{q:"インコタームズ選択の重要性は何か",o:["価格","責任明確化","税率","通関"],a:1,e:"責任分担を明確にするため不可欠だ。"},
+{q:"危険移転後の損害は誰の責任か",o:["売主","買主","銀行","船会社"],a:1,e:"危険移転後は買主の責任となる。"},
+{q:"インコタームズ誤解の結果は何か",o:["問題なし","紛争","税率","保険"],a:1,e:"責任認識のズレが紛争を生む。"},
+
+/* ===== 書類応用 ===== */
+{q:"オリジナルB/Lの役割は何か",o:["コピー","正本","保険","契約"],a:1,e:"正本であり貨物引渡請求権を持つ。"},
+{q:"サレンダーB/Lとは何か",o:["紛失","電子化","原本不要","保険"],a:2,e:"原本提出なしで貨物引渡が可能になる方式だ。"},
+{q:"SWBの特徴は何か",o:["有価証券","非有価証券","保険","契約"],a:1,e:"有価証券ではないため迅速に引渡可能だ。"},
+{q:"インボイスの役割は何か",o:["契約","価格証明","保険","運送"],a:1,e:"価格と取引内容を証明する。"},
+{q:"書類不備時の銀行対応は何か",o:["無視","拒否","修正","保険"],a:1,e:"不一致の場合支払拒否される。"},
+{q:"パッキングリストの重要性は何か",o:["価格","内容確認","税率","契約"],a:1,e:"貨物内容確認に不可欠だ。"},
+{q:"原産地証明書が必要な理由は何か",o:["契約","関税優遇","保険","運送"],a:1,e:"関税優遇措置の適用に必要だ。"},
+{q:"書類遅延の影響は何か",o:["問題なし","通関遅延","税率","契約"],a:1,e:"通関が遅れ納期に影響する。"},
+{q:"B/Lの裏書の意味は何か",o:["契約","権利移転","保険","税率"],a:1,e:"貨物引渡請求権の移転を意味する。"},
+{q:"書類紛失のリスクは何か",o:["なし","貨物受取不可","税率","契約"],a:1,e:"貨物を引き取れなくなる。"},
+
+/* ===== 実務ケース ===== */
+{q:"輸入者が支払拒否した場合どうなるか",o:["問題なし","損失発生","税率","保険"],a:1,e:"輸出者は代金回収不能となる。"},
+{q:"為替予約の目的は何か",o:["利益","レート固定","保険","契約"],a:1,e:"為替変動リスクを回避する。"},
+{q:"貨物損傷時の第一対応は何か",o:["廃棄","保険通知","契約","通関"],a:1,e:"速やかに保険会社へ通知する。"},
+{q:"納期遅延の結果は何か",o:["問題なし","契約違反","税率","保険"],a:1,e:"契約違反となり損害賠償の可能性がある。"},
+{q:"輸出者が為替リスクを避ける方法は何か",o:["無視","予約","遅延","契約"],a:1,e:"為替予約でリスクを回避する。"},
+{q:"信用調査の目的は何か",o:["価格","信用確認","税率","契約"],a:1,e:"取引相手の支払能力を確認するためだ。"},
+{q:"保険未加入の結果は何か",o:["利益","損失負担","税率","契約"],a:1,e:"事故時の損害を自ら負担することになる。"},
+{q:"輸送遅延の主因は何か",o:["税率","天候","契約","銀行"],a:1,e:"天候や港湾混雑などが原因となる。"},
+{q:"契約条件確認の目的は何か",o:["価格","リスク回避","税率","保険"],a:1,e:"トラブルを未然に防ぐためだ。"},
+{q:"輸出入実務で最も重要なことは何か",o:["価格","正確性","税率","運送"],a:1,e:"正確な書類と条件管理が最重要だ。"}
+];
+
+let currentSet = quizSet1;
+let q = [];
+let i = 0;
+let score = 0;
+let totalAnswered = 0;
+let wrongList = [];
+let answered = false;
+
+function shuffleArray(array){
+  const arr = [...array];
+  for(let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function initializeQuiz(){
+  q = shuffleArray(currentSet);
+  i = 0;
+  score = 0;
+  totalAnswered = 0;
+  wrongList = [];
+  loadQuestion();
+  updateStats();
+}
+
+function updateStats(){
+  document.getElementById("progress").innerText = (i + 1) + "/" + q.length;
+  document.getElementById("score").innerText = score;
+  const rate = totalAnswered === 0 ? 0 : Math.round((score / totalAnswered) * 100);
+  document.getElementById("rate").innerText = rate + "%";
+}
+
+function loadQuestion(){
+  answered = false;
+  document.getElementById("question").innerText = q[i].q;
+  document.getElementById("explanation").innerText = "";
+
+  const choicesArea = document.getElementById("choices");
+  choicesArea.innerHTML = "";
+
+  const choices = q[i].o.map((text, index) => ({
+    text,
+    isCorrect: index === q[i].a
+  }));
+
+  const shuffledChoices = shuffleArray(choices);
+
+  shuffledChoices.forEach((choice, idx) => {
+    const btn = document.createElement("div");
+    btn.className = "choice";
+    btn.innerText = choice.text;
+    btn.onclick = () => selectChoice(idx, shuffledChoices);
+    choicesArea.appendChild(btn);
+  });
+
+  updateStats();
+}
+
+function selectChoice(selectedIndex, shuffledChoices){
+  if(answered) return;
+  answered = true;
+
+  const choiceNodes = document.querySelectorAll(".choice");
+  const correctIndex = shuffledChoices.findIndex(choice => choice.isCorrect);
+
+  choiceNodes.forEach((node, idx) => {
+    if(idx === correctIndex) node.classList.add("correct");
+    if(idx === selectedIndex && idx !== correctIndex) node.classList.add("wrong");
+    node.onclick = null;
+  });
+
+  totalAnswered++;
+
+  if(selectedIndex === correctIndex){
+    score++;
+  }else{
+    wrongList.push(q[i]);
+  }
+
+  document.getElementById("explanation").innerText = "解説：" + q[i].e;
+  updateStats();
+}
+
+function nextQuestion(){
+  if(i < q.length - 1){
+    i++;
+    loadQuestion();
+  }else{
+    const rate = totalAnswered === 0 ? 0 : Math.round((score / totalAnswered) * 100);
+    alert("このセットは終了だ。スコア：" + score + "/" + totalAnswered + "　正答率：" + rate + "%");
+  }
+}
+
+function reviewWrong(){
+  if(wrongList.length === 0){
+    alert("現在、復習する問題はない。");
+    return;
+  }
+
+  currentSet = [...wrongList];
+  document.getElementById("modeLabel").innerText = "現在: 間違えた問題だけ復習";
+  q = shuffleArray(currentSet);
+  i = 0;
+  score = 0;
+  totalAnswered = 0;
+  wrongList = [];
+  loadQuestion();
+  updateStats();
+}
+
+function switchQuiz(num){
+  if(num === 1){
+    currentSet = quizSet1;
+    document.getElementById("modeLabel").innerText = "現在: No.1 基礎";
+  }else{
+    currentSet = quizSet2;
+    document.getElementById("modeLabel").innerText = "現在: No.2 応用";
+  }
+  initializeQuiz();
+}
+
+initializeQuiz();
+</script>
+</body>
+</html>
